@@ -1,0 +1,42 @@
+load("@npm//@bazel/typescript:index.bzl", "ts_project")
+load("@npm//http-server:index.bzl", "http_server")
+load("@npm//webpack-cli:index.bzl", webpack = "webpack_cli")
+
+ts_project(
+    name = "tsconfig",
+    # Experimental: Start a tsc daemon to watch for changes to make recompiles faster.
+    supports_workers = True,
+    deps = [
+        "@npm//@types",
+        "@npm//csstype",
+        "@npm//typescript"
+    ],
+)
+
+webpack(
+    name = "bundle",
+    outs = ["app.bundle.js"],
+    args = [
+        "$(execpath app.js)",
+        "--config",
+        "$(execpath webpack.config.js)",
+        "--mode",
+        "development",
+        "-o",
+        "$@"
+    ],
+    data = [
+        "app.js",
+        "webpack.config.js",
+         "@npm//:node_modules"
+    ],
+)
+
+http_server(
+    name = "server",
+    data = [
+        "app.bundle.js",
+        "index.html",
+    ],
+    templated_args = ["./web"],
+)
